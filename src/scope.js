@@ -17,8 +17,8 @@ Scope.prototype.$watch = function(watchFn, listenerFn) {
     this.$$watchers.push(watcher);
 };
 
-Scope.prototype.$digest = function() {
-    var newValue, oldValue;
+Scope.prototype.$$digestOnce = function() {
+    var newValue, oldValue, dirty;
     _.forEach(this.$$watchers, function(watcher) {
 	newValue = watcher.watchFn(this);
 	oldValue = watcher.last;
@@ -27,8 +27,17 @@ Scope.prototype.$digest = function() {
 	    watcher.listenerFn(newValue,
 			       (oldValue === initWatchVal ? newValue : oldValue),
 			       this);
+	    dirty = true;
 	}
     }.bind(this));
+    return dirty;
+};
+
+Scope.prototype.$digest = function(){
+    var dirty;
+    do {
+	dirty = this.$$digestOnce();
+    } while (dirty);
 };
 
 module.exports = Scope;
